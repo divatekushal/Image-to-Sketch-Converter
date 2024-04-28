@@ -2,8 +2,10 @@ import tkinter as tk
 import customtkinter as ctk 
 from PIL import Image, ImageTk
 from customtkinter import filedialog
-import cv2
+import cv2 
 import numpy as np
+original_image = None
+ctk_sketch_img = None
 
 def get_brightness_value(value):
     brightness_label.configure(text=f"{int(value)}")
@@ -17,19 +19,20 @@ def get_contrast_value(value):
 def upload_image():
     file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])
     if file_path:
-        # Load the image and display it using CTkImage
         load_image(file_path)
 
 def load_image(file_path):
     global ctk_img, original_image
     original_image = Image.open(file_path)
-    original_image.thumbnail((210, 210))  # Resize image to fit in the label
-    ctk_img = ctk.CTkImage(light_image=original_image, dark_image=original_image, size=(210, 210))
+    original_image.thumbnail((240, 240))  # Resize image to fit in the label
+    ctk_img = ctk.CTkImage(light_image=original_image, dark_image=original_image, size=(240, 240))
+    upimgbox.configure(text="")
+    preimgbox.configure(text="")
     upimgbox.configure(image=ctk_img)
     upimgbox.image = ctk_img
 
 def convert_to_sketch():
-    global original_image
+    global ctk_sketch_img
     if original_image:
         # Convert the image to a sketch
         img_array = np.array(original_image)
@@ -41,12 +44,28 @@ def convert_to_sketch():
         sketch_img = Image.fromarray(sketch_img)
 
         # Display the sketch image
-        ctk_sketch_img = ctk.CTkImage(light_image=sketch_img, dark_image=sketch_img, size=(210, 210))
+        ctk_sketch_img = ctk.CTkImage(light_image=sketch_img, dark_image=sketch_img, size=(240,240))
         preimgbox.configure(image=ctk_sketch_img)
         preimgbox.image = ctk_sketch_img
     else:
-        print("No image uploaded")
+        preimgbox.configure(text="No Image Uploaded")
+        upimgbox.configure(text="No Image Uploaded")
+    return sketch_img
 
+def save():
+    ctk_sketch_img = convert_to_sketch()
+    if ctk_sketch_img:
+        save_file_path = filedialog.asksaveasfilename(defaultextension=".jpg", filetypes=[("JPEG files", "*.jpg")])
+        if save_file_path:
+            ctk_sketch_img.save(save_file_path)
+            print("Sketch saved successfully.")
+        else:
+            print("No sketch image available to save")
+            ctk_sketch_img.save(save_file_path)
+    else: 
+        preimgbox.configure(text="No Image Uploaded")
+        upimgbox.configure(text="No Image Uploaded")
+                
 ctk.set_appearance_mode("dark")
 root = ctk.CTk()
 root.geometry("700x700")
@@ -102,7 +121,7 @@ convert_button = ctk.CTkButton(frame, text='Convert', width=180, height=28, fg_c
 convert_button.place(x=210, y=400)
 preview_button = ctk.CTkButton(frame, text='Preview', width=180, height=28, fg_color="grey")
 preview_button.place(x=410, y=400)
-save_button = ctk.CTkButton(frame, text='Save', width=180, height=35, fg_color="grey")
+save_button = ctk.CTkButton(frame, text='Save', width=180, height=35, fg_color="grey",command=save)
 save_button.place(x=210, y=450)
 
 root.mainloop()
