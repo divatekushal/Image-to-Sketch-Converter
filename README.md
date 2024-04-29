@@ -2,7 +2,7 @@
 
 This is a simple Python application built using CustomTkinter that allows users to upload an image and convert it into a sketch. Users can also adjust parameters such as brightness, line thickness, and contrast for the sketch conversion.
 
-![ouput_Screenshot](output_screenshot.png)
+![ouput_Screenshot](output_img.png)
 
 
 ## Features
