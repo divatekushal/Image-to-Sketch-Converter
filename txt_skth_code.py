@@ -1,20 +1,29 @@
 import tkinter as tk 
 import customtkinter as ctk 
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk ,ImageEnhance
 from customtkinter import filedialog
 import cv2 
 import numpy as np
 original_image = None
 ctk_sketch_img = None
+brightness_value=0
+thickness_value = 0
+contrast_value=0
 
 def get_brightness_value(value):
-    brightness_label.configure(text=f"{int(value)}")
+    global brightness_value
+    brightness_value = int(value)
+    brightness_label.configure(text=f"{brightness_value}")
 
 def get_thickness_value(value):
-    thickness_label.configure(text=f"{int(value)}")
+    global thickness_value
+    thickness_value = int(value)
+    thickness_label.configure(text=f"{thickness_value}")
 
 def get_contrast_value(value):
-    contrast_label.configure(text=f"{int(value)}")
+    global contrast_value
+    contrast_value = int(value)
+    contrast_label.configure(text=f"{contrast_value}")
 
 def upload_image():
     file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])
@@ -42,15 +51,33 @@ def convert_to_sketch():
         inverted_blurred_img = 255 - blurred_img
         sketch_img = cv2.divide(gray_img, inverted_blurred_img, scale=256.0)
         sketch_img = Image.fromarray(sketch_img)
-
+        sketch_img = ImageEnhance.Brightness(sketch_img).enhance(1 + brightness_value / 100)
+        sketch_img = ImageEnhance.Contrast(sketch_img).enhance(1 + contrast_value / 100)
+        sketch_img = ImageEnhance.Sharpness(sketch_img).enhance(1 + thickness_value / 100)
+        print(brightness_value / 100)
+        print(contrast_value / 100)
+        print(thickness_value)
         # Display the sketch image
         ctk_sketch_img = ctk.CTkImage(light_image=sketch_img, dark_image=sketch_img, size=(240,240))
         preimgbox.configure(image=ctk_sketch_img)
         preimgbox.image = ctk_sketch_img
+        return sketch_img
     else:
         preimgbox.configure(text="No Image Uploaded")
         upimgbox.configure(text="No Image Uploaded")
-    return sketch_img
+    
+
+def preview():
+    preview_img= convert_to_sketch()
+    preview_window = ctk.CTkToplevel(root)
+    preview_window.title("Sketch Preview")
+
+    # Display the converted image in the new window
+    new_img = ctk.CTkImage(light_image=preview_img, dark_image=preview_img, size=(700,700))
+    box=ctk.CTkLabel(preview_window,text="",image=new_img)
+    box.pack()
+
+
 
 def save():
     ctk_sketch_img = convert_to_sketch()
@@ -119,7 +146,7 @@ upload_button = ctk.CTkButton(frame, text='Upload', width=180, height=28, fg_col
 upload_button.place(x=10, y=400)
 convert_button = ctk.CTkButton(frame, text='Convert', width=180, height=28, fg_color="grey", command=convert_to_sketch)
 convert_button.place(x=210, y=400)
-preview_button = ctk.CTkButton(frame, text='Preview', width=180, height=28, fg_color="grey")
+preview_button = ctk.CTkButton(frame, text='Preview', width=180, height=28, fg_color="grey" ,command=preview)
 preview_button.place(x=410, y=400)
 save_button = ctk.CTkButton(frame, text='Save', width=180, height=35, fg_color="grey",command=save)
 save_button.place(x=210, y=450)
